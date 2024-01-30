@@ -280,7 +280,7 @@
         </div>
     </div>
     <div class="box3">
-        <h3 class="title">Completed</h3>
+        <h3 class="title">completed</h3>
         <div id="completed">
             @foreach ($tasks as $task)
                 @if ($task["status"] == 'completed')
