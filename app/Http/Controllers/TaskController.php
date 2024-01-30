@@ -6,6 +6,7 @@ use App\Tag;
 use App\Task;
 use App\TaskUser;
 use App\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -175,7 +176,16 @@ class TaskController extends Controller
 
     public function getUserDetails(Request $request, $id){
         // dd("getUSerDetails in taskcontroller".$id);
-        $user  = User::find($id);
+        $user  = User::find($id)->toArray();
+        // dd($user->toArray());
+        $format = 'Y-m-d H:i:s';
+        $date = Carbon::createFromFormat($format, $user['created_at'])->format('d M Y');
+        $user['created_at'] = $date;
+        // dd($user['created_at']);
+
+        $updated_at = Carbon::createFromFormat($format, $user['updated_at'])->format('d M Y');
+        $user['updated_at'] = $updated_at;
+        // dd($user);
         return response()->json($user,200);
     }
 

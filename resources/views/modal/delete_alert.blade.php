@@ -1,11 +1,11 @@
 {{-- model for deleteing a Task --}}
 
-<div id="delete_alert" class="modal fade" role="dialog">
+<div id="delete_alert_modal" class="modal fade" role="dialog">
     <div class="modal-dialog ">
 
         <!-- Modal content-->
         <div class="modal-content">
-            <div class="d-flex justify-content-between">
+            <div class="d-flex justify-content-between" style="background-color: rgb(221, 221, 221)">
                 <button type="button" class="close ml-3 mt-2" data-dismiss="modal">&times;</button>
                 <h4 class="modal-title mr-3 mt-2">Delete a Task</h4>
             </div>
@@ -17,7 +17,7 @@
                         <form action="task/destroy/{{$task["id"]}}" id="delete_task_form" method="POST" >
                             @csrf
                             @method('DELETE')
-                            <input type="submit" value="Sure" class="btn btn-outline-danger" onclick="hide()">
+                            <input type="submit" value="Sure" class="btn btn-outline-danger">
                         </form>
 
                     @endisset

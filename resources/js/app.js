@@ -4,8 +4,9 @@
  * building robust, powerful web applications using Vue and Laravel.
  */
 
-require('./bootstrap');
-
+require('./bootstrap'); 
+// require('moment/moment.js');
+require('bootstrap-select');
 window.Vue = require('vue');
 
 /**

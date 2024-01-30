@@ -1,6 +1,15 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+    #search_pill{
+        height: 17px;
+    }
+    #expired{
+        height: 17px;
+        /* width: 20px; */
+    }
+</style>
 <div class="d-flex justify-content-sm-around mt-3">
     <a href="/board" class="btn btn-primary">Back</a>
     <form class="d-flex mr-5" method="get" action="/search">
@@ -46,7 +55,10 @@
                     <div class="ms-2 me-auto">
                         <div class="fw-bold">{{$task['title']}}</div>
                     </div>
-                    <span class="badge badge-info rounded-pill ml-3">{{$task['status']}}</span>
+                    <span class="badge badge-light ml-3" id="search_pill">{{$task['status']}}</span>
+                    @if ($task['due_at'] < date('Y-m-d'))
+                        <span class=" ml-2 badge badge-danger" id="expired">Expired</span>
+                    @endif
                 </div>
             </li>
             @endforeach

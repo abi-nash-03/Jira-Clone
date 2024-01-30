@@ -30,4 +30,4 @@ Route::delete('/task/destroy/{id}','TaskControllerWeb@destroyTask');
 Route::post('/share', 'TaskControllerWeb@share');
 Route::get('/search','TaskControllerWeb@search');
 Route::post('/user/board', 'TaskControllerWeb@userBoard');
-Route::get('/demo', 'TaskControllerWeb@demo');
+Route::post('/getUsersTasks','TaskControllerWeb@getTasksOfUsers');

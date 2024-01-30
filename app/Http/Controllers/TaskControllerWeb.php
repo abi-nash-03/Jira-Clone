@@ -8,6 +8,8 @@ use App\TaskUser;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Input;
 
 class TaskControllerWeb extends Controller
 {
@@ -22,6 +24,7 @@ class TaskControllerWeb extends Controller
         $tags = Tag::orderBy("updated_at")->get();
         $task_id_with_assignees = Task::taskIdWithAssignees();
         $users = User::orderBy("updated_at")->get();
+        // dd($users);
         // dd($task_id_with_assignees);         
         $todo = 0;
         $inprogress = 0;
@@ -65,13 +68,15 @@ class TaskControllerWeb extends Controller
         foreach($tasks as $task){
             $assignee_ids[$task['id']] = $this->getAssigneeProfiles($task['id']);
         }
-        // dd($tasks);
+        // dd($assignee_ids);
         $user_id_with_profile = [];
         foreach($users as $user){
             $user_id_with_profile[$user['id']] = $user['profile'];
         }
         // dd($user_id_with_profile);
         $user_id_with_names = $this->getUserId_with_name();
+
+
         return view("tasks.board",[
             "tasks"=>$tasks,
             "tags"=> $tags,
@@ -80,6 +85,7 @@ class TaskControllerWeb extends Controller
             'user_id_with_name' => $user_id_with_names,
             'users' => $users,
         ]);
+
     }
     
     
@@ -119,8 +125,12 @@ class TaskControllerWeb extends Controller
             "status"=> "required",
             "tag_id"=> "required"
             ]);
+        // dd($request->due_at < Carbon::now());
+        if($request->due_at < Carbon::now()){
+            return redirect('/task/create')->with('error', "Invalid Due date");
+        }
         $task_id = Task::createTask($request);
-        TaskUser::createJunctionEntry(auth()->user()->id, $task_id);
+        // TaskUser::createJunctionEntry(auth()->user()->id, $task_id);
         return redirect("/home")->with("success","Your Task has been created");
     }
 
@@ -271,5 +281,42 @@ class TaskControllerWeb extends Controller
     }
     public function demo(){
         return view('tasks.demo');
+    }
+
+    //for API
+    public function getTasksOfUsers(Request $request){
+        $users_id = $request->users_id;
+        $tasks = [];
+        $users = [];
+        $tags = Tag::orderBy("updated_at")->get();
+        $user_id_with_profile = [];
+        $user_id_with_name = [];
+        $all_users = User::all()->toArray();
+        foreach($users_id as $user_id){
+            $tasks_id = TaskUser::getTasks($user_id)->toArray();
+            foreach($tasks_id as $task_id){
+                $tasks[$task_id['task_id']] = Task::find($task_id['task_id'])->toArray();
+            }
+            $users[$user_id] = User::find($user_id);
+        }
+        foreach($all_users as $user){
+            $user_id_with_profile[$user['id']] = $user['profile'];
+            $user_id_with_name[$user['id']] = $user['name'];
+        }
+        $assignee_ids = [];
+        foreach($tasks as $task){
+            $assignee_ids[$task['id']] = $this->getAssigneeProfiles($task['id']);
+        }
+        // dd($user_id_with_name);
+        $response = [
+            'users' => $users,
+            'tags' => $tags,
+            'tasks' => $tasks,
+            'user_id_with_profile' => $user_id_with_profile,
+            'user_id_with_name' => $user_id_with_name,
+            'assignees' => $assignee_ids
+        ];
+        // dd($response);
+        return response()->json($response,200);
     }
 }

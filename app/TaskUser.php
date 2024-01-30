@@ -54,8 +54,15 @@ class   TaskUser extends Pivot
         return $task_ids;
     }
 
+    //get the users assigned to a particular task
     public static function getAssignees($task_id ){
         return self::where("task_id", $task_id)->get();
+    }
+    
+
+    //to get the tasks of a particular user
+    public static function getTasks($user_id){
+        return self::where('user_id', $user_id)->get();
     }
 
     

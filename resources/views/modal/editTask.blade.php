@@ -7,6 +7,32 @@
         width: 90%;
         max-width:1200px;
     }
+
+    .form-control input {
+        border: none;
+        box-sizing: border-box;
+        outline: 0;
+        padding: .75rem;
+        position: relative;
+        width: 100%;
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator {
+        background: transparent;
+        bottom: 0;
+        color: transparent;
+        cursor: pointer;
+        height: auto;
+        left: 0;
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: auto;
+    }
+    
+    select{
+            cursor: pointer;
+        }
 </style>
 
 
@@ -63,8 +89,8 @@
                             </form>
                         </div>
                         <div class="col-5 user_details overflow-scroll">    
-                            <div class="">
-                                <b>Assignee</b>
+                            <div>
+                                <b>Created By</b>
                                 <div class="mt-2 user_details flex-column ">
                                     <img class="image rounded-circle mr-2" id="owner_profile" src="{{asset('/storage/profile/user.png')}}" alt="" style="width: 50px;height: 50px; margin-bottom: 2px;">
                                     <b id="owner_name">Enna therilaya</b>
