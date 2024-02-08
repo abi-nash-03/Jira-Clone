@@ -1,0 +1,18 @@
+instructions
+Controller
+    Interaction with route ( incoming and outgoing )
+    Processing the incoming data
+    interaction with Model
+    interaction with Trait
+    processing with outgoing data and sending data
+Model
+    interaction with controller and trait in getting data from database
+    maintaining relationship in database
+Trait
+    reusable functions
+
+
+traitExampleFunc ($type, $value)
+{
+   
+}

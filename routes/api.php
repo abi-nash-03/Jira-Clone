@@ -49,7 +49,7 @@ Route::group([
 Route::get('/getUserDetails/{id}','TaskController@getUserDetails');
 // Route::get('/getTaskDetails/{id}','TaskController@getTaskDetails')->middleware('auth:api');
 Route::get('/getTaskDetails/{id}','TaskController@getTaskDetails'); 
-Route::get('/getTagName/{id}','TaskController@getTagName');
 Route::get('/getTaskAssignees/{id}','TaskController@getAssigneeProfiles');
+Route::get('/getTagName/{id}','TaskController@getTagName');
 Route::get('/getAssigneesEmailOfTask/{id}','TaskController@getAssigneesEmailOfTask');
 Route::get('/getUsers','TaskController@getUsers');

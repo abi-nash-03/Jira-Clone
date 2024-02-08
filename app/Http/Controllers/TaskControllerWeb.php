@@ -2,44 +2,55 @@
 
 namespace App\Http\Controllers;
 
+use App\Enum\TaskStatusEnum;
 use App\Tag;
 use App\Task;
 use App\TaskUser;
+use App\Traits\Helpers;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Input;
+use App\Traits\TasksWithTaskId;
+use Illuminate\Support\Facades\Redirect;
 
 class TaskControllerWeb extends Controller
 {
-    public function __construct(){
+    public function __construct()
+    {
         $this->middleware("auth");
     }
     
+    public static $users_id = [];
+
     
-    public function getTaskDashboards(Request $request){
-        $tasks = $this->getTasks(auth()->user()->id); //task_id ot task
-        $all_tasks = Task::getAllTasks();
+    //Method for home page board
+    public function getTaskDashboards(Request $request)
+    {
+        //getting task id's of users from jn table
+
+        //checking whether auth user is not null
+        $user = auth()->user();
+        if($user == null){
+            return redirect('auth.login')->with('error', 'Unauthorized');
+        }
+        $user_id = $user->id;
+        $tasks = $this->getTasks($user_id);
+        $all_tasks = Task::getAllTasksWithPagination();
         $tags = Tag::orderBy("updated_at")->get();
-        $task_id_with_assignees = Task::taskIdWithAssignees();
+        $task_id_with_assignees = Task::taskIdWithAssignees(Task::all()->toArray());
         $users = User::orderBy("updated_at")->get();
-        // dd($users);
-        // dd($task_id_with_assignees);         
         $todo = 0;
         $inprogress = 0;
         $completed = 0;
         foreach($tasks as $task){
-            if($task['status'] == 'todo') $todo++;
-            else if($task['status'] == 'completed') $completed++;
-            else if($task['status'] == 'inprogress') $inprogress++;
+            if($task['status'] == TaskStatusEnum::TODO) $todo++;
+            else if($task['status'] == TaskStatusEnum::INPROGRESS) $inprogress++;
+            else if($task['status'] == TaskStatusEnum::COMPLETED) $completed++;
         }
-        $user_id_with_profile = [];
-        foreach($users as $user){
-            $user_id_with_profile[$user['id']] = $user['profile'];
-        }
-        // dd($task_id_with_assignees);
-        $user_id_with_names = $this->getUserId_with_name();
+        $user_id_with_profile = $this->getUserIdWithProfile($users);
+        $user_id_with_names = $this->getUserIdWithName($users);
         
         return view('home', [
             "todo"=>$todo,
@@ -54,27 +65,21 @@ class TaskControllerWeb extends Controller
         ]);
     }
     
-    public function getBoard(){
+    //Method for board page 
+    public function getBoard()
+    {
+        // dd("Hii");
         $tags = Tag::orderBy("updated_at")->get();
-        $task_ids = TaskUser::getTaskIdFromJn();
         $users = User::all()->toArray();
-        $tasks = [];
-        foreach($task_ids as $task_id){
-            $tasks[$task_id] = Task::find($task_id)->toArray();
-        }
-        // dd($tasks);
+        $tasks = TasksWithTaskId::getAllAssignedTasks();
         $users = User::orderBy("updated_at")->get();
+        //map taskId with its assignees id
         $assignee_ids = [];
         foreach($tasks as $task){
-            $assignee_ids[$task['id']] = $this->getAssigneeProfiles($task['id']);
+            $assignee_ids[$task['id']] = Helpers::getAssigneeProfiles('RAW',$task['id']);
         }
-        // dd($assignee_ids);
-        $user_id_with_profile = [];
-        foreach($users as $user){
-            $user_id_with_profile[$user['id']] = $user['profile'];
-        }
-        // dd($user_id_with_profile);
-        $user_id_with_names = $this->getUserId_with_name();
+        $user_id_with_profile = $this->getUserIdWithProfile($users);
+        $user_id_with_names = $this->getUserIdWithName($users);
 
 
         return view("tasks.board",[
@@ -89,71 +94,56 @@ class TaskControllerWeb extends Controller
     }
     
     
-    public function getTaskForHomepage(){
-        $user_id = auth()->user()->id;
+    public function getTaskForHomepage()
+    {
+        $user = auth()->user();
+        if($user == null){
+            return redirect('auth.login')->with('error', 'Unauthorized');
+        }
+        $user_id = $user->id;
+
         $task_user_id = TaskUser::orderBy('updated_at','desc')
         ->where("user_id",$user_id)
         ->paginate(5);
-        // ->get();
         return $task_user_id;
     }
 
     //get Tasks based on user
-    public function getTasks($user_id){
-        // $user = auth()->user();
-        $tasks_id = TaskUser::orderBy('updated_at','desc')
+    public function getTasks($user_id)
+    {
+        $task_ids = TaskUser::orderBy('updated_at','desc')
         ->where("user_id",$user_id)
-        ->get();
-        $tasks = [];
-        foreach($tasks_id as $task_id){
-            $tasks[$task_id['task_id']] = Task::find($task_id->task_id)->attributesToArray();
-        }
-        // dd($tasks);
+        ->get()->toArray();
+        $tasks = Task::getTasksWithIds($task_ids);
         return $tasks;
     }
 
-    public function createTask(){
-        $tags = Tag::orderBy("updated_at")->get();
+    public function createTask()
+    {
+        $tags = Tag::orderBy("updated_at")->get();        
         return view("tasks.create")->with("tags", $tags);
     }
 
-    public function storeTask(Request $request){
+    public function storeTask(Request $request)
+    {
         $this->validate($request, [
             "title"=> "required",
             "body" => "nullable",
             "due_at"=> "date|required",
             "status"=> "required",
             "tag_id"=> "required"
-            ]);
-        // dd($request->due_at < Carbon::now());
+        ]);
+
+        // validating whether the due date is valid or not
         if($request->due_at < Carbon::now()){
             return redirect('/task/create')->with('error', "Invalid Due date");
         }
         $task_id = Task::createTask($request);
-        // TaskUser::createJunctionEntry(auth()->user()->id, $task_id);
         return redirect("/home")->with("success","Your Task has been created");
     }
 
-    public function editTask($id){
-        dd("edit id task controller web". $id);
-        $task = Task::findOrFail($id);
-        if($task == null){
-            return redirect("/board")->with("error","Invalid request");
-        }
-
-        //Authorizing the user
-        $users = TaskUser::getUser(auth()->user()->id, $id);
-        // dd($users);
-        if($users->toArray() == null){
-            return redirect('/board')->with('error','Your\'e Unauthorized');
-        }
-
-        $tags = Tag::orderBy("updated_at")->get();
-        $curr_tag = Tag::find($task->tag_id);
-        return view("modal.editTask")->with(["task" => $task,"tags" => $tags, "tag_name" => $curr_tag->name]);
-    }
-
-    public function updateTask(Request $request, $task_id){
+    public function updateTask(Request $request, $task_id)
+    {
         $this->validate($request, [
             "title"=> "required",
             "body" => "nullable",
@@ -172,36 +162,39 @@ class TaskControllerWeb extends Controller
             return redirect('/board')->with('error','Your\'e Unauthorized');
         }
 
-        // dd($request);
 
         Task::updateTask($request,$task_id);
 
-        return redirect("/board")->with("success","Task Updated Successfully");
+        //redirecting back to the same page from where the request originated
+        return back()->with("success","Task Updated Successfully");
     }
 
-    public function destroyTask($id){
-        // dd($id);
+    public function destroyTask($id)
+    {
+        $user = auth()->user();
+        if($user == null){
+            return redirect('auth.login')->with('error', 'Unauthorized');
+        }
+        $user_id = $user->id;
         $task = Task::find($id);
         if($task == null){
-            return redirect("")->with("error","Invalid request");
+            return redirect("/home")->with("error","Invalid request");
         }
-        // dd($id);
-        $users = TaskUser::getUser(auth()->user()->id, $id);
-        // dd($users);
+        $users = TaskUser::getUser($user_id, $id);
         if($users == null){
             return redirect('/board')->with('error','Your\'e Unauthorized to do this action');
         }
         
-        TaskUser::deleteJunctionEntry(auth()->user()->id, $id);
+        TaskUser::deleteJunctionEntry($user_id, $id);
         
         return redirect('/board')->with('success','Task Deleted Successfully');
     }
 
-    public function share(Request $request){
+    public function share(Request $request)
+    {
         $email = $request->email;
         $task_id = $request->task_id;
         $user = User::getUserByEmail($email);
-        // dd($user->id);
         if($user == null){
             return redirect('/board')->with('error','Invalid email');
         }
@@ -212,102 +205,78 @@ class TaskControllerWeb extends Controller
         return redirect('/board')->with("error","Task Previously assigned");
     }
 
-    public function getAssigneeProfiles($task_id){   
-        $assine_id = TaskUser::getAssignees($task_id);
-        // dd($assine_id->toArray());
-        return $assine_id->toArray();
-    }
 
-    public function search(Request $request){
-        // dd($request);
-        // $tasks = Task::searchWithKey($request->search_key);
-        // dd($tasks);
-        $task = Task::searchWithFilter($request)->toArray();
+    public function search(Request $request)
+    {
+        $tasks = Task::searchWithFilter($request)->toArray();
 
-        // dd($task->toArray() == null);
         return view('tasks.search',[
-            'tasks' => $task,
+            'tasks' => $tasks,
             'search_key' => $request->search_key,
         ]);
     }
 
-    public function getUserId_with_name(){
+    public function getUserIdWithName($users)
+    {
         $arr = [];
-        $users = User::all();
         foreach ($users as $user) {
             $arr[$user->id] = $user->name;
         }
-        // dd($arr);
 
         return $arr;
     }
 
-    public function userBoard(Request $request){
-        $user_ids = $request->toArray();
-        $users = User::all()->toArray();
-        $tags = Tag::orderBy("updated_at")->get();
-        $tasks = [];
-        foreach($users as $user){
-            if(isset($user_ids[$user['id']])){
-                $tasks_per_user = $this->getTasks($user['id']);
-                // dd($tasks_per_user);
-                foreach($tasks_per_user as $task_per_user){
-                    $tasks[$task_per_user['id']] = $task_per_user;
-                }
-            }
+    public function getUserIdWithProfile($users)
+    {
+        $arr = [];
+        foreach ($users as $user){
+            $arr[$user['id']] = $user['profile'];
         }
-        // dd($tasks);
-        $users = User::orderBy("updated_at")->get();
-        $assignee_ids = [];
-        foreach($tasks as $task){
-            $assignee_ids[$task['id']] = $this->getAssigneeProfiles($task['id']);
-        }
-        // dd($tasks);
-        $user_id_with_profile = [];
-        foreach($users as $user){
-            $user_id_with_profile[$user['id']] = $user['profile'];
-        }
-        // dd($user_id_with_profile);
-        $user_id_with_names = $this->getUserId_with_name();
-        return view("tasks.board",[
-            "tasks"=>$tasks,
-            "tags"=> $tags,
-            "assignees"=> $assignee_ids,
-            'user_with_profile' => $user_id_with_profile,
-            'user_id_with_name' => $user_id_with_names,
-            'users' => $users,
-        ]);
+        return $arr;
+    }
 
-    }
-    public function demo(){
-        return view('tasks.demo');
-    }
 
     //for API
-    public function getTasksOfUsers(Request $request){
+
+    //Get the users by user filter
+    public function getTasksOfUsers(Request $request)
+    {
         $users_id = $request->users_id;
+        $jn_entries = TaskUser::all()->toArray();
         $tasks = [];
+        $all_tasks = TasksWithTaskId::getTasksWithTaskId();
+        $all_users = User::all()->toArray();
+
+        //user object mapped with user id
+        $user_with_id = [];
+        foreach($all_users as $user){
+            $user_with_id[$user['id']] = $user;
+        }
         $users = [];
         $tags = Tag::orderBy("updated_at")->get();
         $user_id_with_profile = [];
         $user_id_with_name = [];
-        $all_users = User::all()->toArray();
+
+        //Getting tasks of filtered users 
         foreach($users_id as $user_id){
-            $tasks_id = TaskUser::getTasks($user_id)->toArray();
-            foreach($tasks_id as $task_id){
-                $tasks[$task_id['task_id']] = Task::find($task_id['task_id'])->toArray();
+            foreach($jn_entries as $jn_entrie){
+                if($jn_entrie['user_id'] == $user_id){
+                    $tasks[$jn_entrie['task_id']] = $all_tasks[$jn_entrie['task_id']];
+                }
             }
-            $users[$user_id] = User::find($user_id);
+            $users[$user_id] = $user_with_id[$user_id];
         }
+
+        //assigning userid with profile and name
         foreach($all_users as $user){
             $user_id_with_profile[$user['id']] = $user['profile'];
             $user_id_with_name[$user['id']] = $user['name'];
         }
+
         $assignee_ids = [];
         foreach($tasks as $task){
-            $assignee_ids[$task['id']] = $this->getAssigneeProfiles($task['id']);
+            $assignee_ids[$task['id']] = Helpers::getAssigneeProfiles('RAW',$task['id']);
         }
-        // dd($user_id_with_name);
         $response = [
             'users' => $users,
             'tags' => $tags,
@@ -316,7 +285,29 @@ class TaskControllerWeb extends Controller
             'user_id_with_name' => $user_id_with_name,
             'assignees' => $assignee_ids
         ];
-        // dd($response);
         return response()->json($response,200);
     }
+
+    public function getTagName(Request $request, $id)
+    {
+        $tag = Tag::find($id);
+        return response()->json($tag,200);
+    }
+
+    public function getAssigneesEmailOfTask(Request $request, $id)
+    {
+        $assines = Helpers::getAssigneeProfiles('JSON',$id)->getData();
+        // dd($assines);
+        $task_with_email = array();
+        foreach($assines as $assine){
+            array_push($task_with_email,User::getUserEmailById($assine->user_id)->attributesToArray());
+        }
+        return response()->json($task_with_email,200);
+    }
+
+    public function getUsers(Request $request)
+    {
+        return response()->json(User::all(), 200);
+    }
+
 }

@@ -17,7 +17,7 @@
         width: 100%;
     }
 
-    input[type="date"]::-webkit-calendar-picker-indicator {
+    /* input[type="date"]::-webkit-calendar-picker-indicator {
         background: transparent;
         bottom: 0;
         color: transparent;
@@ -28,8 +28,10 @@
         right: 0;
         top: 0;
         width: auto;
+    } */
+    input{
+        cursor: pointer;
     }
-    
     select{
             cursor: pointer;
         }

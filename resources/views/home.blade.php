@@ -3,21 +3,7 @@
 {{-- @include('modal.delete_alert'); --}}
 @section('content')
     <style>
-        #card_images{
-            height: 25px;
-            width: 25px;
-        }
-        #edit_task_card_images{
-            height: 20px;
-            width: 20px;
-        }
-        #shared_email{
-            /* background-color: black */
-            /* border: 2px solid; */
-            border-radius: 10px;
-            padding:3px;
-            background-color: rgb(209, 244, 255)
-        }
+
         /* #assignessInHome{
             background-color: #dcdcdc;
         } */

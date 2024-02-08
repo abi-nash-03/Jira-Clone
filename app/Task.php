@@ -2,26 +2,43 @@
 
 namespace App;
 
+use App\Enum\TaskStatusEnum;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class Task extends Model
 {
 
+    protected $fillable = ['title', 'body', 'due_at', 'status', 'created_at', 'updated_at', 'tag_id', 'created_by'];
+
+    protected $casts = [
+        'status' => TaskStatusEnum::class
+    ];
 
     
     //relating Task to user
-    public function users(){
+    public function users()
+    {
         return $this->belongsToMany(User::class,'task_user','task_id','user_id')
         ->withTimestamps()
         ->wherePivot('deleted_at', null);
     }
     //relating Task to Tag
-    public function tag(){
+    public function tag()
+    {
         return $this->hasOne('App\Tag','id','tag_id');
     }   
-    public static function createTask(Request $request){
+
+    public static function createTask(Request $request)
+    {
+        // $user = auth()->user();
+        $user = auth()->user();
+        if($user == null){
+            return redirect('auth.login')->with('error', 'Unauthorized');
+        }
+        $user_id = $user->id;
         $task = new Task();
         $task->title = $request->title;
         if($request->body == null){
@@ -33,14 +50,19 @@ class Task extends Model
         $task->due_at = $request->due_at;
         $task->status = $request->status;
         $task->tag_id = $request->tag_id;
-        $task->created_by = auth()->user()->id;
+        $task->created_by = $user_id;
         $task->save();
-    
+        Mail::send('emails.taskCreated', $task->toArray(),
+        function($message) use($user){
+            $message
+            ->to($user->email, $user->name)
+            ->subject("A new Task has been created");
+        });
         return $task->id;
     }
 
-    public static function updateTask(Request $request, $id){
-        // dd("id = ".$id);
+    public static function updateTask(Request $request, $id)
+    {
         $task = Task::find($id);
         $task->title = $request->title;
         $task->body = $request->body;
@@ -48,45 +70,61 @@ class Task extends Model
         $task->status = $request->status;
         $task->tag_id = $request->tag_id;
         $task->save();
-        // dd($task);
-        // dd($task);
+        $task_arr = [];
+        array_push($task_arr, $task->toArray());
+        $task_id_with_assignees = Task::taskIdWithAssignees($task_arr);
+        foreach($task_id_with_assignees as $assignees){
+            foreach($assignees as $assignee){
+                $user = User::find($assignee);
+                Mail::send("emails.taskUpdated", $task->toArray(), 
+                function($message) use ($user) {
+                    $message
+                    ->to($user->email, $user->name)
+                    ->subject("Review your updated task");
+                });
+            }
+        }
     }
     
-    public static function getAllTasks(){
+    public static function getAllTasksWithPagination()
+    {
         return Task::paginate(5);
     }
 
-    public static function taskIdWithAssignees(){
-        $tasks = Task::all()->toArray();
-        // dd($tasks[0]['id']);
-        $taskId_with_assignees = [];
+    public static function taskIdWithAssignees($tasks)
+    {
+        $taskId_with_assignees_id = [];
         foreach($tasks as $task){
             $assignees = TaskUser::getAssignees($task['id'])->toArray();
-            $taskId_with_assignees[$task['id']] = [];
+            $taskId_with_assignees_id[$task['id']] = [];
             foreach($assignees as $assignee){
-                array_push($taskId_with_assignees[$task['id']],$assignee['user_id']);
+                array_push($taskId_with_assignees_id[$task['id']],$assignee['user_id']);
             }
         }
 
-        return $taskId_with_assignees;
+        return $taskId_with_assignees_id;
     }
 
-    public static function searchWithKey($key){
+    public static function searchWithKey($key)
+    {
         if($key==null){
             return null;
         }
         return Task::where('title','like', '%'.$key.'%')->get();
     }
 
-    public function scopeDate($query, $date){
+    public function scopeDate($query, $date)
+    {
         $query->where('due_at','<=' ,$date);
     }
 
-    public function scopeStatus($query, $status){
+    public function scopeStatus($query, $status)
+    {
         $query->where('status',$status);
     }
 
-    public static function searchWithFilter($request){
+    public static function searchWithFilter($request)
+    {
         $task = Task::select('*')
         ->when($request->has('search_key'), function($q) use($request){
             $q->where('title', 'like', '%'.$request['search_key'].'%');
@@ -102,7 +140,29 @@ class Task extends Model
         return $task;
     }
 
-    // public function getTaskAssignees($task_id){
-    //     return 
-    // }
+    public static function getTaskByStatus($user_id, $status)
+    {
+        $tasks = Task::where('status', $status)
+                ->where('user_id', $user_id)
+                ->get(0);
+        return $tasks;
+    }
+
+    public static function getTasksWithIds($task_ids)
+    {
+        // dd($task_ids);
+        $arr_ids = [];
+        foreach($task_ids as $task_id){
+            array_push($arr_ids, $task_id['task_id']);
+        }
+        // dd($arr_ids);
+        $arr = Task::whereIn('id', $arr_ids)->get();
+        $tasks = [];
+        foreach($arr as $task){
+            $tasks[$task['id']] = $task->toArray();
+        }
+
+        return $tasks;
+    }
+
 }

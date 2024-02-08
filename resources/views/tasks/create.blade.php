@@ -12,7 +12,7 @@
             width: 100%;
         }
 
-        input[type="date"]::-webkit-calendar-picker-indicator {
+        /* input[type="date"]::-webkit-calendar-picker-indicator {
             background: transparent;
             bottom: 0;  
             color: transparent;
@@ -23,9 +23,12 @@
             right: 0;
             top: 0;
             width: auto;
-        }
+        } */
         
         select{
+            cursor: pointer;
+        }
+        input{
             cursor: pointer;
         }
     </style>
@@ -51,9 +54,9 @@
             <div class="input-group mb-4">
                 <label class="input-group-text" for="inputGroupSelect01">Status</label>
                 <select class="form-select form-control" for="inputGroupSelect01" aria-label="Default select example" name="status">
-                <option selected value="todo">Todo</option>
-                <option value="inprogress">In Progress</option>
-                <option value="completed">Completed</option>
+                <option selected value="TODO">Todo</option>
+                <option value="INPROGRESS">In Progress</option>
+                <option value="COMPLETED">Completed</option>
                 </select>
             </div>
         

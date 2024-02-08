@@ -11,6 +11,10 @@
 |
 */
 
+
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -29,5 +33,14 @@ Route::post('/task/{id}','TaskControllerWeb@updateTask');
 Route::delete('/task/destroy/{id}','TaskControllerWeb@destroyTask');
 Route::post('/share', 'TaskControllerWeb@share');
 Route::get('/search','TaskControllerWeb@search');
-Route::post('/user/board', 'TaskControllerWeb@userBoard');
+// Route::post('/user/board', 'TaskControllerWeb@userBoard');
 Route::post('/getUsersTasks','TaskControllerWeb@getTasksOfUsers');
+Route::get('/insight', 'InsightController@demo');
+Route::get('/getAvgDailyTasks', 'InsightController@getAvgDailyTasks');
+Route::get('/getAvgMonthlyTasks', 'InsightController@getAvgMonthlyTasks');
+Route::get('/getAvgYearlyTasks', 'InsightController@getAvgYearlyTasks');
+Route::post('/avgDailyTaskSpecificMonth', 'InsightController@avgDailyTaskSpecificMonth');
+
+Route::get('/getTagName/{id}','TaskControllerWeb@getTagName');
+Route::get('/getUsers','TaskControllerWeb@getUsers');
+Route::get('/getAssigneesEmailOfTask/{id}','TaskControllerWeb@getAssigneesEmailOfTask');

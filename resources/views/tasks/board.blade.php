@@ -2,148 +2,6 @@
 
 @section('content')
 <style>
-    .hvr-fade {
-        display: inline-block;
-        vertical-align: middle;
-        -webkit-transform: perspective(1px) translateZ(0);
-        transform: perspective(1px) translateZ(0);
-        box-shadow: 0 0 1px rgba(0, 0, 0, 0);
-        overflow: hidden;
-        -webkit-transition-duration: 0.3s;
-        transition-duration: 0.3s;
-        -webkit-transition-property: color, background-color;
-        transition-property: color, background-color;
-    }
-    .hvr-fade:hover, .hvr-fade:focus, .hvr-fade:active {
-        background-color: #e1e1e1;
-        color: #373737;
-    }
-    .box1::-webkit-scrollbar {
-        display: none;
-    }
-
-    .box2::-webkit-scrollbar {
-        display: none;
-    }
-
-    .box3::-webkit-scrollbar {
-        display: none;
-    }
-
-    .title {
-        /* position: unset; */
-    }
-
-    .main_container {
-        display: flex;
-        width: 100%;
-        height: 100%;
-        padding: 50px;
-        justify-content: space-around;
-        /* background-color: aquamarine; */
-    }
-
-    .box1 {
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        width: 400px;
-        height: 600px;
-        /* box-shadow: 0.7px 0.7px rgb(217, 217, 217), -0.7px -0.7px rgb(179, 172, 172); */
-        box-shadow: 1px 1px 5px rgb(173, 173, 173);
-        background-color: #f4f5f7;
-        overflow-y: scroll;
-        scroll-behavior: smooth;
-        margin-right: 5px;
-        border-radius: 3px;
-
-
-    }
-
-    .box2 {
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        width: 400px;
-        height: 600px;
-        /* box-shadow: 0.7px 0.7px rgb(183, 183, 183), -0.7px -0.7px rgb(179, 172, 172); */
-        box-shadow: 1px 1px 5px rgb(173, 173, 173);
-        background-color: #F4F5F7;
-        overflow-y: scroll;
-        scroll-behavior: smooth;
-        margin-right: 5px;
-        border-radius: 3px;
-
-    }
-
-    .box3 {
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        width: 400px;
-        height: 600px;
-        box-shadow: 1px 1px 5px rgb(173, 173, 173);
-        background-color: #F4F5F7;
-        overflow-y: scroll;
-        scroll-behavior: smooth;
-        border-radius: 3px;
-
-    }
-
-    .card_custom {
-        margin: 10px;
-        box-shadow: 1px 1px 5px rgb(173, 173, 173);
-    }
-
-    .board_title {
-        position: relative;
-    }
-
-    .buttons {
-        display: flex;
-        justify-content: end;
-        margin-right: 90px;
-    }
-
-
-    .col1{
-        background-color: rgb(255, 255, 255);
-    }
-    .col2row1{
-        background-color: rgb(255, 255, 255);
-    }
-    .col2row2{
-        background-color: rgb(255, 255, 255);
-    }
-    #card_images{
-        height: 25px;
-        width: 25px;
-    }
-    #shared_email{
-        /* background-color: black */
-        /* border: 2px solid; */
-        border-radius: 10px;
-        padding:3px;
-        background-color: rgb(209, 244, 255)
-    }
-    /* .shared_emails{
-        background-color: lightblue;
-    } */
-    #remaining_profiles{
-        height: 20px;
-        width: 20px;
-        background-color: aliceblue;
-    }
-    .card-custom{
-        /* box-shadow: 1px 1px 1px rgb(173, 173, 173); */
-    }   
-    #expired{
-        height: 17px;
-        /* width: 20px; */
-    }
 
 </style>
 
@@ -173,7 +31,7 @@
                 {{-- <input type="submit" value="apply" id="formsubmit" class="btn btn-primary btn-sm ml-4"> --}}
             </div>
         </form>
-        <button id="sub_btn" class="btn btn-primary btn-sm">submit</button>
+        <button id="sub_btn" class="btn btn-primary btn-sm">apply</button>
     </div>
 </div>
 <div class="main_container" >
@@ -280,7 +138,7 @@
         </div>
     </div>
     <div class="box3">
-        <h3 class="title">completed</h3>
+        <h3 class="title">Completed</h3>
         <div id="completed">
             @foreach ($tasks as $task)
                 @if ($task["status"] == 'completed')
@@ -342,15 +200,18 @@
     var taskId;
     // var tagName;
     $(document).ready(function(){
-        window.getId = function(id){            // alert("id = "+id);
+        window.getId = function(id){
 
             taskId = "#"+id;
             var curr_task_id = id.substring(16);
             var url = $(taskId).attr('data-url');
             var task_url = $(taskId).attr('data-taskid');
-            var tag_name_url = "api/getTagName/";
-            var task_emails = "api/getAssigneesEmailOfTask/"+curr_task_id;
-            var getUsers = "api/getUsers";
+            //var tag_name_url = "api/getTagName/";
+            var tag_name_url = "getTagName/";
+            //var task_emails = "api/getAssigneesEmailOfTask/"+curr_task_id;
+            var task_emails = "getAssigneesEmailOfTask/"+curr_task_id;
+            //var getUsers = "api/getUsers";
+            var getUsers = "/getUsers";
             
             assignTaskIdToShare();
             //get user details
@@ -414,23 +275,17 @@
                     
                     
         }
+
+        //Ajax call to get the tasks of filtered users
         $("#sub_btn").click(function() { 
-            // console.log("ffi");
-            // alert("fdisf");
             var x = $("#userEmails").serializeArray();
             var users_id = [];
             for(var i=1;i<x.length;i++){
-                // console.log(x[i]);
                 users_id.push(x[i]['value']);
-                // users_id[x[i]['value']] = x[i]['value'];
             }
             var user_data = {
                 'users_id' : users_id
             }
-            // alert(users_id);
-            // $.post('/getUsersTasks',users_id,function(data){
-            //     console.log(data);
-            // });
             var x = $.ajax({
                 type: "POST",
                 url: '/getUsersTasks',
@@ -439,14 +294,6 @@
                 contentType: "application/json; charset=utf-8",
                 crossDomain: true,
                 dataType: "json",
-                // success: function(data, status, jqXHR){
-                //     alert(data);
-                //     console.log(data);
-                // }
-                // error: function(jqXHR, status){
-                //     console.log(jqXHR);
-                //     alert("fail "+status.code);
-                // }
             });
 
             x.done(function(data){
@@ -455,39 +302,37 @@
                 $('#completed').empty();
                 var keys = Object.keys(data['tasks']);
                 console.log(data);
-                // console.log('user id with names');
-                // console.log(data['user_id_with_name']);
                 for(var i=0;i<keys.length;i++){
-                    // console.log(new Date());
-                    // console.log(new Date(data['tasks'][keys[i]].due_at));
-                    // console.log(new Date(data['tasks'][keys[i]].due_at) < new Date());
                     var status = data['tasks'][keys[i]]['status'];
                     if(status == 'todo'){
-                        $('#todo').append(
+                        var todo_sel = $('#todo');
+                        todo_sel.append(
                             getCard(data['tasks'][keys[i]], data['user_id_with_name'], data['assignees'], data['user_id_with_profile'], data['user_id_with_profile'])
                         );
+                        todo_sel.hide();
+                        todo_sel.show(300);
+                        // todo_sel.slideDown(500);
                     }
                     else if(status == 'inprogress'){
-                        $('#inprogress').append(
+                        var inprogress_sel = $('#inprogress');
+                        inprogress_sel.append(
                             getCard(data['tasks'][keys[i]], data['user_id_with_name'], data['assignees'], data['user_id_with_profile'], data['user_id_with_profile'])
                         );
+                        inprogress_sel.hide();
+                        inprogress_sel.show(300);
                     }
                     else if(status == 'completed'){
-                        $('#completed').append(
+                        var completed_sel = $('#completed')
+                        completed_sel.append(
                             getCard(data['tasks'][keys[i]], data['user_id_with_name'], data['assignees'], data['user_id_with_profile'], data['user_id_with_profile'])
                         );
+                        completed_sel.hide();
+                        completed_sel.show(300);
                     }
-                    // console.log(getCard(data['tasks'][keys[i]], data['user_id_with_name']));
-                    // console.log(getCreatedBy(data['tasks'][keys[i]].created_by, data['user_id_with_name']));
-                    // console.log();
-                    // break;
                 }
                 
             });
         }); 
-
-        
-
         
     });
 
@@ -510,18 +355,13 @@
                         "<input type=hidden name=_csrf value=getCSRF()>"+
                         "</form>"+
                         "<div class='d-flex justify-content-end'>"+
-                            getExpired(data.created_at)+
+                            getExpired(data.due_at)+
                             "<a class='ml-5' onclick=deleteTask("+data.id+") >&times;</a>"+
                         "</div>"+
                     "</div>";
         card = card+upper_body;
         card = card + getlowerPart(data.created_by, user_id_with_name,data.id, assignees, user_id_with_profile);
-        // console.log(data.id);
-        // console.log("assignees = "+assignees);
-        // assigneesPrifile(data.id, assignees);
-        // assigneesPrifile(data.id, assignees, user_id_with_profile);
         card = card + "</div></div>";
-        // console.log(card);
         return card;
     }
 
@@ -546,9 +386,7 @@
         var assignees_profile = "<div class='col-6 d-flex justify-content-end'>";
         console.log(Object.keys(assignees[task_id]));
         var n = Object.keys(assignees[task_id]).length;
-        // console.log("n = "+n);
         for(var i=0;i<n;i++){
-            // console.log(user_id_with_profile[assignees[task_id][i]['user_id']]);
             if(i > 2){
                 var rem = n-i;
                 assignees_profile += "<div class='image rounded-circle' id=remaining_profiles><b>+"+rem+"</b></div>";
@@ -559,13 +397,14 @@
             assignees_profile += img;
         }
         assignees_profile = assignees_profile + "</div>";
-        // console.log(assignees_profile);
         return assignees_profile;
     }
 
     function getExpired(date){
         var date = new Date(date);
         var expired_pill = "";
+        console.log(date+" "+new Date());
+        console.log(date < new Date());
         if(date < new Date()){
             expired_pill = "<span class='badge badge-danger' id=expired>Expired</span>"
         }
@@ -576,9 +415,7 @@
         return $('meta[name="csrf-token"]').attr('content');
     }
 
-    // function deleteTask(id){
-        
-    // }
+
 </script>
 
 @endsection

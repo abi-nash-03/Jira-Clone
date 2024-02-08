@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class   TaskUser extends Pivot
 {
@@ -27,16 +28,23 @@ class   TaskUser extends Pivot
         }
 
         return false;
-        // dd($task_user);
     }   
 
     public static function deleteJunctionEntry($user_id, $task_id){
-        // dd("".$user_id." ".$task_id);
         $task_user = TaskUser::where("user_id", $user_id)
         ->where("task_id", $task_id)
         ->update(array('deleted_at' => DB::raw('NOW()')));
-        // dd($task_user); 
-        // ->update(array('deleted_at' => DB::raw('NOW()')));
+        $task_id_with_assignees = Task::taskIdWithAssignees($task_user);
+        foreach($task_id_with_assignees as $assignees){
+            foreach($assignees as $assignee){
+                $user = User::find($assignee);
+                Mail::send("emails.taskDeleted", $user, function($message) use ($user) {
+                    $message
+                    ->to($user->email, $user->name)
+                    ->subject("Review your updated task");
+                });
+            }
+        }
     }
 
     public static function getUser( $user_id, $task_id ){
@@ -64,6 +72,8 @@ class   TaskUser extends Pivot
     public static function getTasks($user_id){
         return self::where('user_id', $user_id)->get();
     }
+
+    // public static 
 
     
 }
