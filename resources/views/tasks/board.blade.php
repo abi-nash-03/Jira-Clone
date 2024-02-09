@@ -9,14 +9,17 @@
 
 <div class="d-flex justify-content-between align-items-center mt-3">
     <h2 class="ml-5 board_title">Board</h2>
-    <form class="d-flex mr-5" method="get" action="/search">
-        @csrf
-        <input class="form-control mr-sm-2" list="homepage_search" type="search" name ="search_key" placeholder="Search" aria-label="Search">
-        <datalist id="homepage_search">
-            <option value="">abinash</option>
-        </datalist>
-        <button class="btn btn-outline-success my-2 my-sm-0"  type="submit">Search</button>
-    </form>
+    <div class="d-flex">
+        <form class="d-flex mr-2" method="get" action="/search">
+            @csrf
+            <input class="form-control mr-sm-2" list="homepage_search" type="search" name ="search_key" placeholder="Search" aria-label="Search">
+            <datalist id="homepage_search">
+                <option value="">abinash</option>
+            </datalist>
+            <button class="btn btn-outline-success my-2 my-sm-0"  type="submit">Search</button>
+        </form>
+        <a href="/exportTasks" class="btn btn-primary">Export Task</a>
+    </div>
     
 </div>
 <div class="container">

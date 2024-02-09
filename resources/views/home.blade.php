@@ -1,18 +1,6 @@
 @extends('layouts.app')
 
-{{-- @include('modal.delete_alert'); --}}
 @section('content')
-    <style>
-
-        /* #assignessInHome{
-            background-color: #dcdcdc;
-        } */
-        /* a:link {
-            color: green;
-            background-color: transparent;
-            text-decoration: none;
-        } */
-    </style>
 
     <div class="container pt-3 ">
         <div class="pt-3 pb-4">
@@ -57,7 +45,6 @@
                 <p>No tasks to list :)</p >
                 @endif
                 @foreach ($all_tasks as $task)
-                {{-- {{$task->created_by}} --}}
                     <li class="list-group-item d-flex justify-content-between align-items-start">
                         {{-- <div class="col-8 d-flex hvr-fade" >
                             <div class="ms-2 me-auto">

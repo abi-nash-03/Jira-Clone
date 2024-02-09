@@ -44,3 +44,6 @@ Route::post('/avgDailyTaskSpecificMonth', 'InsightController@avgDailyTaskSpecifi
 Route::get('/getTagName/{id}','TaskControllerWeb@getTagName');
 Route::get('/getUsers','TaskControllerWeb@getUsers');
 Route::get('/getAssigneesEmailOfTask/{id}','TaskControllerWeb@getAssigneesEmailOfTask');
+Route::get('/report','ReportController@reportPage');
+Route::post('/downloadReport', 'ReportController@downloadReport');
+Route::get('/exportTasks', 'TaskControllerWeb@exportTasks');

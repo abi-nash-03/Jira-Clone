@@ -54,9 +54,9 @@
             <div class="input-group mb-4">
                 <label class="input-group-text" for="inputGroupSelect01">Status</label>
                 <select class="form-select form-control" for="inputGroupSelect01" aria-label="Default select example" name="status">
-                <option selected value="TODO">Todo</option>
-                <option value="INPROGRESS">In Progress</option>
-                <option value="COMPLETED">Completed</option>
+                <option selected value="todo">Todo</option>
+                <option value="inprogress">In Progress</option>
+                <option value="completed">Completed</option>
                 </select>
             </div>
         

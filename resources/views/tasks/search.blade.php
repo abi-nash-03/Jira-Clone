@@ -10,7 +10,7 @@
         /* width: 20px; */
     }
 </style>
-<div class="d-flex justify-content-sm-around mt-3">
+<div class=" container d-flex justify-content-sm-between mt-3">
     <a href="/board" class="btn btn-primary">Back</a>
     <form class="d-flex mr-5" method="get" action="/search">
         @csrf

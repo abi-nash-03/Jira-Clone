@@ -3,10 +3,12 @@
 namespace App;
 
 use App\Enum\TaskStatusEnum;
+use App\Jobs\SendEmail;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+
 
 class Task extends Model
 {
@@ -52,12 +54,13 @@ class Task extends Model
         $task->tag_id = $request->tag_id;
         $task->created_by = $user_id;
         $task->save();
-        Mail::send('emails.taskCreated', $task->toArray(),
-        function($message) use($user){
-            $message
-            ->to($user->email, $user->name)
-            ->subject("A new Task has been created");
-        });
+        // Mail::send('emails.taskCreated', $task->toArray(),
+        // function($message) use($user){
+        //     $message
+        //     ->to($user->email, $user->name)
+        //     ->subject("A new Task has been created");
+        // });
+        dispatch( new SendEmail($user, $task->toArray(), "A new Task has been created","emails.taskCreated"));
         return $task->id;
     }
 
@@ -75,13 +78,14 @@ class Task extends Model
         $task_id_with_assignees = Task::taskIdWithAssignees($task_arr);
         foreach($task_id_with_assignees as $assignees){
             foreach($assignees as $assignee){
-                $user = User::find($assignee);
-                Mail::send("emails.taskUpdated", $task->toArray(), 
-                function($message) use ($user) {
-                    $message
-                    ->to($user->email, $user->name)
-                    ->subject("Review your updated task");
-                });
+                $user = User::find($assignee)->toArray();
+                // Mail::send("emails.taskUpdated", $task->toArray(), 
+                // function($message) use ($user) {
+                //     $message
+                //     ->to($user->email, $user->name)
+                //     ->subject("Review your updated task");
+                // });
+                dispatch( new SendEmail($user, $task->toArray(), "Review your updated task", "emails.taskUpdated"));
             }
         }
     }

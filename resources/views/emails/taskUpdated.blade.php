@@ -8,6 +8,5 @@
 </head>
 <body>
     <h1>Task has been successfully updated</h1>
-    
 </body>
 </html>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enum\TaskStatusEnum;
+use App\Exports\TaskExport;
 use App\Tag;
 use App\Task;
 use App\TaskUser;
@@ -14,8 +15,10 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Input;
 use App\Traits\TasksWithTaskId;
 use Illuminate\Support\Facades\Redirect;
+use Maatwebsite\Excel\Excel;
+use Maatwebsite\Excel\Facades\Excel as FacadesExcel;
 
-class TaskControllerWeb extends Controller
+class TaskControllerWeb extends BaseController
 {
     public function __construct()
     {
@@ -36,7 +39,7 @@ class TaskControllerWeb extends Controller
             return redirect('auth.login')->with('error', 'Unauthorized');
         }
         $user_id = $user->id;
-        $tasks = $this->getTasks($user_id);
+        $tasks = Helpers::getTasksByUserID($user_id);
         $all_tasks = Task::getAllTasksWithPagination();
         $tags = Tag::orderBy("updated_at")->get();
         $task_id_with_assignees = Task::taskIdWithAssignees(Task::all()->toArray());
@@ -49,9 +52,9 @@ class TaskControllerWeb extends Controller
             else if($task['status'] == TaskStatusEnum::INPROGRESS) $inprogress++;
             else if($task['status'] == TaskStatusEnum::COMPLETED) $completed++;
         }
-        $user_id_with_profile = $this->getUserIdWithProfile($users);
-        $user_id_with_names = $this->getUserIdWithName($users);
-        
+        $user_id_with_profile = Helpers::getUserIdWithProfile($users);
+        $user_id_with_names = Helpers::getUserIdWithName($users);
+        // $demo = TaskUser::getTaskUserWithTaskID();
         return view('home', [
             "todo"=>$todo,
             "inprogress" => $inprogress,
@@ -72,16 +75,17 @@ class TaskControllerWeb extends Controller
         $tags = Tag::orderBy("updated_at")->get();
         $users = User::all()->toArray();
         $tasks = TasksWithTaskId::getAllAssignedTasks();
+        // dd($tasks); 
         $users = User::orderBy("updated_at")->get();
         //map taskId with its assignees id
         $assignee_ids = [];
         foreach($tasks as $task){
             $assignee_ids[$task['id']] = Helpers::getAssigneeProfiles('RAW',$task['id']);
         }
-        $user_id_with_profile = $this->getUserIdWithProfile($users);
-        $user_id_with_names = $this->getUserIdWithName($users);
+        $user_id_with_profile = Helpers::getUserIdWithProfile($users);
+        $user_id_with_names = Helpers::getUserIdWithName($users);
 
-
+        // dd($tasks);
         return view("tasks.board",[
             "tasks"=>$tasks,
             "tags"=> $tags,
@@ -109,14 +113,12 @@ class TaskControllerWeb extends Controller
     }
 
     //get Tasks based on user
-    public function getTasks($user_id)
-    {
-        $task_ids = TaskUser::orderBy('updated_at','desc')
-        ->where("user_id",$user_id)
-        ->get()->toArray();
-        $tasks = Task::getTasksWithIds($task_ids);
-        return $tasks;
-    }
+    // public function getTasks($user_id)
+    // {
+    //     $task_ids = TaskUser::getTasksByuserId($user_id);
+    //     $tasks = Task::getTasksWithIds($task_ids);
+    //     return $tasks;
+    // }
 
     public function createTask()
     {
@@ -216,24 +218,6 @@ class TaskControllerWeb extends Controller
         ]);
     }
 
-    public function getUserIdWithName($users)
-    {
-        $arr = [];
-        foreach ($users as $user) {
-            $arr[$user->id] = $user->name;
-        }
-
-        return $arr;
-    }
-
-    public function getUserIdWithProfile($users)
-    {
-        $arr = [];
-        foreach ($users as $user){
-            $arr[$user['id']] = $user['profile'];
-        }
-        return $arr;
-    }
 
 
     //for API
@@ -297,7 +281,7 @@ class TaskControllerWeb extends Controller
     public function getAssigneesEmailOfTask(Request $request, $id)
     {
         $assines = Helpers::getAssigneeProfiles('JSON',$id)->getData();
-        // dd($assines);
+        // dd($assines);F
         $task_with_email = array();
         foreach($assines as $assine){
             array_push($task_with_email,User::getUserEmailById($assine->user_id)->attributesToArray());
@@ -308,6 +292,10 @@ class TaskControllerWeb extends Controller
     public function getUsers(Request $request)
     {
         return response()->json(User::all(), 200);
+    }
+
+    public function exportTasks(){
+        return FacadesExcel::download(new TaskExport, 'tasks.xlsx');
     }
 
 }

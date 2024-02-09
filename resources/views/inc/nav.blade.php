@@ -11,6 +11,7 @@
             <li class="nav-item active d-flex">
             <a class="nav-link" href="/board">Board <span class="sr-only">(current)</span></a>
             <a class="nav-link" href="/insight">Insight <span class="sr-only">(current)</span></a>
+            <a class="nav-link" href="/report">Report <span class="sr-only">(current)</span></a>
             </li>
         @endif
         {{-- <li class="nav-item">
