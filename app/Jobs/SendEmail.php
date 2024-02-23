@@ -13,6 +13,9 @@ class SendEmail implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public $tries = 3;
+    public $timeout = 60;
+
     protected $user, $task, $msg, $file;
     /**
      * Create a new job instance.

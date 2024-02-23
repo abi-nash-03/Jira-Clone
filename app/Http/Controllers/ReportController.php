@@ -3,17 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Enum\TaskStatusEnum;
+use App\Jobs\SendReport;
 use App\Tag;
 use App\Task;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use PDF;
+use Barryvdh\DomPDF\Facade as PDF;
 
 class ReportController extends BaseController
 {
 
     public function reportPage(){
-        // dd("report request");
         $all_tasks = Task::all()->toArray();
         $tags = Tag::all()->toArray();
         $tag_with_tagId = [];
@@ -29,7 +29,6 @@ class ReportController extends BaseController
         foreach($all_tasks as $task){
             array_push($tasks[$task['status']], $task);
         }
-        // dd($tasks);
         return view('report.reportHome') ->with([
             'tasks' => $tasks,
             'tag_with_id' => $tag_with_tagId,
@@ -37,6 +36,7 @@ class ReportController extends BaseController
     }
 
     public function downloadReport(Request $request){
+        $user = auth()->user();
         $all_tasks = Task::all()->toArray();
         $tags = Tag::all()->toArray();
         $download_timestamp = Carbon::now();
@@ -57,13 +57,13 @@ class ReportController extends BaseController
                 array_push($filtered_tasks[$task['status']], $task);
             }
         }
-        // dd($filtered_tasks); 
         $data = [
             'tasks' => $filtered_tasks,
             'tag_with_id' => $tag_with_tagId,
             'date' => $download_timestamp,
         ];
         $pdf = PDF::loadView('report.report', $data);
-        return $pdf->download('RoomsPDF.pdf');
+        dispatch(new SendReport($user->email, $pdf));
+        return $pdf->download('report.pdf');
     }
 }

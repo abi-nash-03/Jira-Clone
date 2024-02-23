@@ -23,12 +23,9 @@ class TaskExport implements FromCollection, WithHeadings
         $assignees = TaskUser::getTaskIdWithAssigneesEmail($user_id);
         $result_arr = [];
         foreach($tasks as $task){
-            // array_push($task, $assignees[$task['id']]);
             $task['assignees'] = $assignees[$task['id']];
-            // dd($task);
             array_push($result_arr, $task);
         }
-        // dd($result_arr);
         return new Collection([
             $result_arr
         ]);
@@ -46,7 +43,7 @@ class TaskExport implements FromCollection, WithHeadings
             'updated_at',
             'tag_id',
             'created by',
-            'aggignees',
+            'assignees',
         ];
     }
 }

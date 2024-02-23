@@ -151,14 +151,14 @@ class TaskController extends Controller
         return response()->json($assine_id,200);
     }
 
-    // public function getAssigneesEmailOfTask(Request $request, $id){
-    //     $assinees = $this->getAssigneeProfiles($request,$id)->getData();
-    //     $task_with_email = array();
-    //     foreach($assinees as $assine){
-    //         array_push($task_with_email,User::getUserEmailById($assine->user_id)->attributesToArray());
-    //     }
-    //     return response()->json($task_with_email,200);
-    // }
+    public function getAssigneesEmailOfTask(Request $request, $id){
+        $assinees = $this->getAssigneeProfiles($request,$id)->getData();
+        $task_with_email = array();
+        foreach($assinees as $assine){
+            array_push($task_with_email,User::getUserEmailById($assine->user_id)->attributesToArray());
+        }
+        return response()->json($task_with_email,200);
+    }
 
     // public function getUsers(Request $request){
     //     return response()->json(User::all(), 200);
